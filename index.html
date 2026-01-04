@@ -112,31 +112,50 @@
 
 <script>
 	async function calculateCalories() {
-		// index.html 裡的 calculateCalories 函數片段
-		try {
-		    const response = await fetch('/api/calculate', { // Vercel 會自動處理這個路徑
-		        method: 'POST',
-		        headers: { 'Content-Type': 'application/json' },
-		        body: JSON.stringify({ foodText: foodText })
-		    });
-		
-		    if (!response.ok) {
-		        // 如果後端噴錯，這裡會抓到具體的錯誤文字
-		        const errorDetail = await response.text();
-		        throw new Error(`伺服器錯誤 (${response.status}): ${errorDetail}`);
-		    }
-		
-		    const result = await response.json();
-		    renderResults(result);
-		
-		} catch (error) {
-		    console.error('Error:', error);
-		    alert('計算失敗：' + error.message); // 這裡會彈出具體的錯誤原因
-		    resetForm();
-		}
+	    // 1. 先取得輸入框的值並定義 foodText 變數
+	    const foodInput = document.getElementById('foodInput');
+	    const foodText = foodInput.value.trim();
+	    
+	    if (!foodText) return alert('請輸入食物內容');
+	
+	    // 2. 獲取 UI 元件
+	    const calcBtn = document.getElementById('calcBtn');
+	    const inputArea = document.getElementById('inputArea');
+	    const resultArea = document.getElementById('resultArea');
+	    const status = document.getElementById('status');
+	    const content = document.getElementById('content');
+	
+	    // 3. 切換 UI 狀態
+	    calcBtn.disabled = true;
+	    inputArea.style.display = 'none';
+	    resultArea.style.display = 'block';
+	    status.style.display = 'block';
+	    content.style.display = 'none';
+	
+	    try {
+	        // 4. 發送請求給 Vercel 後端
+	        const response = await fetch('/api/calculate', {
+	            method: 'POST',
+	            headers: { 'Content-Type': 'application/json' },
+	            body: JSON.stringify({ foodText: foodText }) // 這裡現在有值了！
+	        });
+	
+	        if (!response.ok) {
+	            const errorDetail = await response.text();
+	            throw new Error(`伺服器錯誤 (${response.status}): ${errorDetail}`);
+	        }
+	
+	        const result = await response.json();
+	        renderResults(result);
+	
+	    } catch (error) {
+	        console.error('Error:', error);
+	        alert('計算失敗：' + error.message);
+	        resetForm();
+	    }
 	}
 
-    function renderResults(data) {
+	function renderResults(data) {
         document.getElementById('status').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         
@@ -173,4 +192,5 @@
 
 </body>
 </html>
+
 
