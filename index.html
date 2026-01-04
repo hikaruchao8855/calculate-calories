@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 食物熱量計算器V2</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { text-align: center; color: #2c3e50; }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #219150; }
+        button:disabled { background-color: #bdc3c7; }
+
+        #resultArea { display: none; margin-top: 30px; text-align: center; }
+        .total-calories {
+            font-size: 48px;
+            font-weight: bold;
+            color: #e67e22;
+            margin: 20px 0;
+        }
+        .recalculate-btn {
+            background-color: #34495e;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #eee;
+            text-align: left;
+        }
+        th { background-color: #f8f9fa; }
+        .fattening-row {
+            background-color: #ffcccc !important;
+            font-weight: bold;
+            color: #c0392b;
+        }
+        .loading { color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍎 食物熱量計算器</h1>
+    
+    <div id="inputArea">
+        <p>請輸入食物（可用逗點、空白或換行隔開）：</p>
+        <textarea id="foodInput" placeholder="例如：大麥克, 50g&#10;中薯, 200g&#10;可樂, 300ml"></textarea>
+        <button id="calcBtn" onclick="calculateCalories()">開始計算</button>
+    </div>
+
+    <div id="resultArea">
+        <div id="status" class="loading">正在聯繫 AI 計算中...</div>
+        <div id="content" style="display:none;">
+            <div class="total-calories" id="totalDisplay">總熱量一共 -- 卡</div>
+            <button class="recalculate-btn" onclick="resetForm()">重新計算</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>食物種類</th>
+                        <th>數量</th>
+                        <th>熱量 (kcal)</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+	async function calculateCalories() {
+		// ... 前面的 UI 切換邏輯保持不變 ...
+
+		try {
+			// 修改 fetch 的對象為本地的 /api/calculate
+			const response = await fetch('/api/calculate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ foodText: foodText })
+			});
+
+			if (!response.ok) throw new Error('API 請求失敗');
+
+			const result = await response.json();
+			renderResults(result);
+
+		} catch (error) {
+			console.error(error);
+			alert('計算失敗，請洽詢趙先生。');
+			resetForm();
+		}
+	}
+
+    function renderResults(data) {
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        
+        // 顯示總熱量
+        document.getElementById('totalDisplay').innerText = `總熱量一共 ${data.total_calories} 卡`;
+
+        // 填充表格
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        data.items.forEach(item => {
+            const row = document.createElement('tr');
+            if (item.is_fattening) {
+                row.className = 'fattening-row';
+            }
+            
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.calories}</td>
+                <td>${item.note || ''}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('inputArea').style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('calcBtn').disabled = false;
+        document.getElementById('foodInput').value = '';
+    }
+</script>
+
+</body>
+</html>
