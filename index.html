@@ -112,25 +112,27 @@
 
 <script>
 	async function calculateCalories() {
-		// ... 前面的 UI 切換邏輯保持不變 ...
-
+		// index.html 裡的 calculateCalories 函數片段
 		try {
-			// 修改 fetch 的對象為本地的 /api/calculate
-			const response = await fetch('/api/calculate', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ foodText: foodText })
-			});
-
-			if (!response.ok) throw new Error('API 請求失敗');
-
-			const result = await response.json();
-			renderResults(result);
-
+		    const response = await fetch('/api/calculate', { // Vercel 會自動處理這個路徑
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify({ foodText: foodText })
+		    });
+		
+		    if (!response.ok) {
+		        // 如果後端噴錯，這裡會抓到具體的錯誤文字
+		        const errorDetail = await response.text();
+		        throw new Error(`伺服器錯誤 (${response.status}): ${errorDetail}`);
+		    }
+		
+		    const result = await response.json();
+		    renderResults(result);
+		
 		} catch (error) {
-			console.error(error);
-			alert('計算失敗，請洽詢趙先生。');
-			resetForm();
+		    console.error('Error:', error);
+		    alert('計算失敗：' + error.message); // 這裡會彈出具體的錯誤原因
+		    resetForm();
 		}
 	}
 
@@ -171,3 +173,4 @@
 
 </body>
 </html>
+
