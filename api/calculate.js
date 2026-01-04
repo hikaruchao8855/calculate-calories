@@ -1,26 +1,25 @@
 export default async function handler(req, res) {
-    // 1. 檢查是否為 POST 請求
+    // 1. 強制檢查是否為 POST 請求
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+        return res.status(405).json({ error: '請使用 POST 方法' });
     }
 
     try {
-        // 2. 從 req.body 中解構出 foodText
-        // 注意：這裡必須確保前端傳過來的 JSON Key 叫做 foodText
-        const { foodText } = req.body;
+        // 2. 取得並檢查 foodText (增加預設值避免報錯)
+        const body = req.body || {};
+        const foodText = body.foodText;
 
-        // 3. 檢查變數是否真的有拿到（防止變數未定義報錯）
+        // 如果真的沒拿到資料，直接回報具體錯誤，不要往下執行
         if (!foodText) {
-            return res.status(400).json({ error: '接收到的食物內容為空' });
+            return res.status(400).json({ error: '後端未接收到 foodText，請檢查前端傳輸格式。' });
         }
 
         const GROQ_API_KEY = process.env.GROQ_API_KEY;
-        const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+        
+        // 3. 組合 Prompt (確保在這裡變數 foodText 一定存在)
+        const prompt = `你是一個營養學專家。請分析以下食物列表並計算熱量： "${foodText}"。請以 JSON 格式回傳，不要有額外的解釋。格式如下： { "total_calories": 數字, "items": [ {"name": "名稱", "quantity": "數量", "calories": 數字, "is_fattening": true, "note": "說明"} ] }`;
 
-        // 4. 定義 Prompt (確保 foodText 在這裡已經被正確定義)
-        const prompt = `你是一個營養學專家。請分析以下食物列表並計算熱量： "${foodText}"。請以 JSON 格式回傳，不要有任何額外的解釋文字。格式如下： { "total_calories": 總熱量數字, "items": [ {"name": "食物名稱", "quantity": 數量, "calories": 數字, "is_fattening": true/false, "note": "簡短說明"} ] }`;
-
-        const response = await fetch(API_URL, {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -33,20 +32,17 @@ export default async function handler(req, res) {
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            return res.status(500).json({ error: 'Groq API 錯誤', details: errorData });
+        const data = await response.json();
+        
+        if (data.choices && data.choices[0]) {
+            const aiResult = JSON.parse(data.choices[0].message.content);
+            return res.status(200).json(aiResult);
+        } else {
+            throw new Error('Groq API 回傳格式異常');
         }
 
-        const data = await response.json();
-        const result = JSON.parse(data.choices[0].message.content);
-
-        // 5. 回傳結果給前端
-        return res.status(200).json(result);
-
     } catch (error) {
-        // 捕捉任何可能的錯誤並回傳給前端顯示
-        console.error('Server Error:', error);
-        return res.status(500).json({ error: '伺服器內部錯誤: ' + error.message });
+        // 將具體錯誤顯示在前端，方便 debug
+        return res.status(500).json({ error: '後端執行失敗: ' + error.message });
     }
 }
