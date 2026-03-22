@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兒童英文單字翻翻樂</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #f0faff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #ff6b6b; font-size: 3rem; text-shadow: 2px 2px #fff; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            border: 5px solid #4ecdc4;
+            border-radius: 20px;
+            padding: 30px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 6px 0 #45b7af;
+        }
+        .card:hover { transform: scale(1.05); background-color: #e6fffb; }
+        .card:active { transform: translateY(4px); box-shadow: 0 2px 0 #45b7af; }
+        .eng { font-size: 2rem; font-weight: bold; color: #2d3436; display: block; }
+        .chi { font-size: 1.2rem; color: #636e72; }
+        .icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+    <h1>🌟 英文單字大冒險 🌟</h1>
+    <p>點擊卡片聽聽看怎麼說吧！</p>
+
+    <div class="grid" id="gameGrid">
+        </div>
+
+    <script>
+        const words = [
+            { eng: 'Hard', chi: '硬的', icon: '💎' },
+            { eng: 'Soft', chi: '軟的', icon: '🧸' },
+            { eng: 'Heavy', chi: '重的', icon: '🐘' },
+            { eng: 'Light', chi: '輕的', icon: '🪶' },
+            { eng: 'Clean', chi: '乾淨', icon: '✨' },
+            { eng: 'Dirty', chi: '髒髒', icon: '💩' },
+            { eng: 'New', chi: '新的', icon: '🎁' },
+            { eng: 'Old', chi: '舊的', icon: '👴' },
+            { eng: 'Round', chi: '圓形', icon: '🔵' },
+            { eng: 'Square', chi: '正方形', icon: '🟦' },
+            { eng: 'Gold', chi: '金色', icon: '🥇' },
+            { eng: 'Silver', chi: '銀色', icon: '🥈' }
+        ];
+
+        const grid = document.getElementById('gameGrid');
+
+        words.forEach(word => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <span class="icon">${word.icon}</span>
+                <span class="eng">${word.eng}</span>
+                <span class="chi">${word.chi}</span>
+            `;
+            
+            card.onclick = () => speak(word.eng);
+            grid.appendChild(card);
+        });
+
+        function speak(text) {
+            // 取消目前正在說的話，避免重疊
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8; // 速度稍微慢一點點，讓小孩聽清楚
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
