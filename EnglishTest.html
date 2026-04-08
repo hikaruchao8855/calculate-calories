@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文單字背誦遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .word {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .word:hover {
+            color: #667eea;
+        }
+        .speaker-icon {
+            font-size: 0.5em;
+            opacity: 0.5;
+        }
+        .word:hover .speaker-icon {
+            opacity: 1;
+        }
+        .hint {
+            font-size: 1.1em;
+            color: #666;
+        }
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        .option {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        .option.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .option.wrong {
+            border-color: #f44336;
+            background: #ffebee;
+            color: #c62828;
+        }
+        .option:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        .result-text {
+            font-size: 1.2em;
+            color: #666;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .game-over {
+            text-align: center;
+        }
+        .final-score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .restart-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>英文單字背誦遊戲</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">答對</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="wrongCount">0</div>
+                <div class="stat-label">答錯</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="remainCount">20</div>
+                <div class="stat-label">剩餘</div>
+            </div>
+        </div>
+        <div class="card" id="gameCard">
+            <div class="word" id="wordDisplay" onclick="speakWord()">
+                female
+                <span class="speaker-icon">🔊</span>
+            </div>
+            <div class="hint" id="hintDisplay">點擊單字可發音</div>
+        </div>
+        <div class="options" id="optionsContainer"></div>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>下一題</button>
+    </div>
+
+    <script>
+        const words = [
+            { word: "female", meaning: "女人" },
+            { word: "region", meaning: "地區" },
+            { word: "forbid", meaning: "禁止" },
+            { word: "continue", meaning: "繼續" },
+            { word: "education", meaning: "教育" },
+            { word: "principal", meaning: "校長" },
+            { word: "equal", meaning: "相等的" },
+            { word: "control", meaning: "控制" },
+            { word: "annoy", meaning: "惱怒" },
+            { word: "threaten", meaning: "威脅" },
+            { word: "surgery", meaning: "外科手術" },
+            { word: "recover", meaning: "康復" },
+            { word: "sign", meaning: "簽名" },
+            { word: "persuade", meaning: "說服" },
+            { word: "adopt", meaning: "採納" },
+            { word: "policy", meaning: "政策" },
+            { word: "ensure", meaning: "保證" },
+            { word: "establish", meaning: "建立" },
+            { word: "honor", meaning: "榮耀" },
+            { word: "weapon", meaning: "手段" }
+        ];
+
+        let currentIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let shuffledWords = [];
+        let options = [];
+
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function getRandomOptions(correctMeaning, allMeanings) {
+            const wrongOptions = allMeanings.filter(m => m !== correctMeaning);
+            const shuffledWrong = shuffle(wrongOptions).slice(0, 3);
+            return shuffle([correctMeaning, ...shuffledWrong]);
+        }
+
+        function initGame() {
+            shuffledWords = shuffle(words);
+            currentIndex = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            updateStats();
+            showQuestion();
+        }
+
+        function speakWord() {
+            const word = shuffledWords[currentIndex].word;
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+        }
+
+        function showQuestion() {
+            const current = shuffledWords[currentIndex];
+            const allMeanings = words.map(w => w.meaning);
+            options = getRandomOptions(current.meaning, allMeanings);
+
+            document.getElementById('wordDisplay').innerHTML = `${current.word}<span class="speaker-icon">🔊</span>`;
+            document.getElementById('hintDisplay').textContent = '這個英文單字的意思是什麼？';
+            document.getElementById('nextBtn').disabled = true;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(btn, option, current.meaning);
+                container.appendChild(btn);
+            });
+
+            speakWord();
+        }
+
+        function checkAnswer(btn, selected, correct) {
+            const allBtns = document.querySelectorAll('.option');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btn.classList.add('correct');
+                correctCount++;
+            } else {
+                btn.classList.add('wrong');
+                wrongCount++;
+                allBtns.forEach(b => {
+                    if (b.textContent === correct) b.classList.add('correct');
+                });
+            }
+
+            updateStats();
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= shuffledWords.length) {
+                showGameOver();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showGameOver() {
+            const card = document.getElementById('gameCard');
+            card.innerHTML = `
+                <div class="game-over">
+                    <div class="result-icon">🎉</div>
+                    <div class="final-score">${correctCount}/${shuffledWords.length}</div>
+                    <div class="result-text">
+                        ${correctCount === shuffledWords.length ? '太棒了！全部答對！' : 
+                          correctCount >= shuffledWords.length * 0.8 ? '做得很好！' :
+                          correctCount >= shuffledWords.length * 0.5 ? '還不錯，繼續加油！' : '多加練習會更好！'}
+                    </div>
+                </div>
+            `;
+            document.getElementById('optionsContainer').innerHTML = '';
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.textContent = '重新開始';
+            nextBtn.onclick = () => {
+                nextBtn.textContent = '下一題';
+                nextBtn.onclick = nextQuestion;
+            card.innerHTML = `
+                <div class="word" id="wordDisplay" onclick="speakWord()">
+                    female
+                    <span class="speaker-icon">🔊</span>
+                </div>
+                <div class="hint" id="hintDisplay">點擊單字可發音</div>
+            `;
+                initGame();
+            };
+        }
+
+        function updateStats() {
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('wrongCount').textContent = wrongCount;
+            document.getElementById('remainCount').textContent = shuffledWords.length - currentIndex;
+            const progress = (currentIndex / shuffledWords.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
