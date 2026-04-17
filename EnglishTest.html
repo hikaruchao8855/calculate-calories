@@ -36,6 +36,26 @@
             font-size: 1.8em;
             margin-bottom: 10px;
         }
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            background: white;
+            color: #667eea;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
         .progress-bar {
             background: #e0e0e0;
             border-radius: 10px;
@@ -77,8 +97,8 @@
             justify-content: center;
             margin-bottom: 20px;
         }
-        .word {
-            font-size: 2.5em;
+        .meaning-display {
+            font-size: 2em;
             font-weight: bold;
             color: #333;
             margin-bottom: 15px;
@@ -88,14 +108,14 @@
             justify-content: center;
             gap: 10px;
         }
-        .word:hover {
+        .meaning-display:hover {
             color: #667eea;
         }
         .speaker-icon {
             font-size: 0.5em;
             opacity: 0.5;
         }
-        .word:hover .speaker-icon {
+        .meaning-display:hover .speaker-icon {
             opacity: 1;
         }
         .hint {
@@ -132,6 +152,42 @@
         .option:disabled {
             cursor: not-allowed;
             opacity: 0.7;
+        }
+        .fill-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .fill-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .fill-input.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        .fill-input.wrong {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        .answer-feedback {
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .answer-feedback.correct {
+            color: #4caf50;
+        }
+        .answer-feedback.wrong {
+            color: #f44336;
+        }
+        .answer-feedback .correct-answer {
+            color: #4caf50;
         }
         .result-icon {
             font-size: 4em;
@@ -175,12 +231,19 @@
         .restart-btn {
             margin-top: 20px;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>英文單字背誦遊戲</h1>
+            <div class="mode-switch">
+                <button class="mode-btn active" id="choiceModeBtn" onclick="switchMode('choice')">選擇題</button>
+                <button class="mode-btn" id="fillModeBtn" onclick="switchMode('fill')">填字題</button>
+            </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -195,18 +258,22 @@
                 <div class="stat-label">答錯</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="remainCount">20</div>
+                <div class="stat-value" id="remainCount">68</div>
                 <div class="stat-label">剩餘</div>
             </div>
         </div>
         <div class="card" id="gameCard">
-            <div class="word" id="wordDisplay" onclick="speakWord()">
-                female
+            <div class="meaning-display" id="meaningDisplay" onclick="speakWord()">
+                女人
                 <span class="speaker-icon">🔊</span>
             </div>
-            <div class="hint" id="hintDisplay">點擊單字可發音</div>
+            <div class="hint" id="hintDisplay">點擊可以聽發音</div>
         </div>
         <div class="options" id="optionsContainer"></div>
+        <div id="fillContainer" class="hidden">
+            <input type="text" class="fill-input" id="fillInput" placeholder="輸入英文單字" autocomplete="off">
+            <div class="answer-feedback" id="answerFeedback"></div>
+        </div>
         <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>下一題</button>
     </div>
 
@@ -231,7 +298,59 @@
             { word: "ensure", meaning: "保證" },
             { word: "establish", meaning: "建立" },
             { word: "honor", meaning: "榮耀" },
-            { word: "weapon", meaning: "手段" }
+            { word: "weapon", meaning: "手段" },
+            { word: "dare", meaning: "敢" },
+            { word: "entertain", meaning: "娛樂" },
+            { word: "imagination", meaning: "有想像力的" },
+            { word: "consistently", meaning: "持續的" },
+            { word: "convey", meaning: "傳達" },
+            { word: "parade", meaning: "遊行" },
+            { word: "request", meaning: "請求" },
+            { word: "extreme", meaning: "極端的" },
+            { word: "achieve", meaning: "達成" },
+            { word: "passion", meaning: "熱情" },
+            { word: "hardship", meaning: "艱難" },
+            { word: "poverty", meaning: "貧窮" },
+            { word: "rescue", meaning: "解救" },
+            { word: "career", meaning: "事業" },
+            { word: "weave", meaning: "編織" },
+            { word: "deliver", meaning: "傳達" },
+            { word: "disadvantage", meaning: "劣勢" },
+            { word: "overcome", meaning: "克服" },
+            { word: "attitude", meaning: "態度" },
+            { word: "challenge", meaning: "挑戰" },
+            { word: "obstacle", meaning: "障礙" },
+            { word: "fulfill", meaning: "實現" },
+            { word: "bang", meaning: "砰的一聲" },
+            { word: "quote", meaning: "引用" },
+            { word: "raw", meaning: "生的" },
+            { word: "freeze", meaning: "結冰" },
+            { word: "mental", meaning: "心智的" },
+            { word: "victim", meaning: "受害者" },
+            { word: "republic", meaning: "共和國" },
+            { word: "opposite", meaning: "在對面" },
+            { word: "superior", meaning: "較優的" },
+            { word: "emergency", meaning: "緊急事件" },
+            { word: "creative", meaning: "有創造力的" },
+            { word: "media", meaning: "媒體" },
+            { word: "plenty", meaning: "充分" },
+            { word: "wagon", meaning: "運貨馬車" },
+            { word: "scholar", meaning: "學者" },
+            { word: "risk", meaning: "風險" },
+            { word: "loose", meaning: "寬鬆的" },
+            { word: "cone", meaning: "圓錐體" },
+            { word: "odd", meaning: "奇怪的" },
+            { word: "breath", meaning: "呼吸" },
+            { word: "release", meaning: "釋放" },
+            { word: "temper", meaning: "脾氣" },
+            { word: "cotton", meaning: "棉" },
+            { word: "lily", meaning: "百合" },
+            { word: "straw", meaning: "吸管" },
+            { word: "flour", meaning: "麵粉" },
+            { word: "tunnel", meaning: "隧道" },
+            { word: "quit", meaning: "離開" },
+            { word: "intelligent", meaning: "聰明的" },
+            { word: "exhibition", meaning: "展覽會" }
         ];
 
         let currentIndex = 0;
@@ -239,6 +358,7 @@
         let wrongCount = 0;
         let shuffledWords = [];
         let options = [];
+        let currentMode = 'choice';
 
         function shuffle(array) {
             const arr = [...array];
@@ -253,6 +373,27 @@
             const wrongOptions = allMeanings.filter(m => m !== correctMeaning);
             const shuffledWrong = shuffle(wrongOptions).slice(0, 3);
             return shuffle([correctMeaning, ...shuffledWrong]);
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const choiceBtn = document.getElementById('choiceModeBtn');
+            const fillBtn = document.getElementById('fillModeBtn');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const fillContainer = document.getElementById('fillContainer');
+
+            if (mode === 'choice') {
+                choiceBtn.classList.add('active');
+                fillBtn.classList.remove('active');
+                optionsContainer.classList.remove('hidden');
+                fillContainer.classList.add('hidden');
+            } else {
+                choiceBtn.classList.remove('active');
+                fillBtn.classList.add('active');
+                optionsContainer.classList.add('hidden');
+                fillContainer.classList.remove('hidden');
+            }
+            initGame();
         }
 
         function initGame() {
@@ -274,28 +415,51 @@
 
         function showQuestion() {
             const current = shuffledWords[currentIndex];
-            const allMeanings = words.map(w => w.meaning);
-            options = getRandomOptions(current.meaning, allMeanings);
-
-            document.getElementById('wordDisplay').innerHTML = `${current.word}<span class="speaker-icon">🔊</span>`;
+            
             document.getElementById('hintDisplay').textContent = '這個英文單字的意思是什麼？';
             document.getElementById('nextBtn').disabled = true;
+            document.getElementById('answerFeedback').textContent = '';
+            document.getElementById('answerFeedback').className = 'answer-feedback';
 
-            const container = document.getElementById('optionsContainer');
-            container.innerHTML = '';
+            if (currentMode === 'choice') {
+                document.getElementById('meaningDisplay').innerHTML = `${current.word}<span class="speaker-icon">🔊</span>`;
+                document.getElementById('meaningDisplay').onclick = speakWord;
+                const allMeanings = words.map(w => w.meaning);
+                options = getRandomOptions(current.meaning, allMeanings);
+                
+                const container = document.getElementById('optionsContainer');
+                container.innerHTML = '';
+                container.classList.remove('hidden');
 
-            options.forEach(option => {
-                const btn = document.createElement('button');
-                btn.className = 'option';
-                btn.textContent = option;
-                btn.onclick = () => checkAnswer(btn, option, current.meaning);
-                container.appendChild(btn);
-            });
+                options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option';
+                    btn.textContent = option;
+                    btn.onclick = () => checkChoiceAnswer(btn, option, current.meaning);
+                    container.appendChild(btn);
+                });
+            } else {
+                document.getElementById('meaningDisplay').innerHTML = `${current.meaning}<span class="speaker-icon">🔊</span>`;
+                document.getElementById('meaningDisplay').onclick = speakWord;
+                document.getElementById('hintDisplay').textContent = '請輸入英文單字';
+                
+                const fillInput = document.getElementById('fillInput');
+                fillInput.value = '';
+                fillInput.className = 'fill-input';
+                fillInput.disabled = false;
+                fillInput.placeholder = '輸入英文單字';
+                fillInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') {
+                        checkFillAnswer();
+                    }
+                };
+                fillInput.focus();
+            }
 
             speakWord();
         }
 
-        function checkAnswer(btn, selected, correct) {
+        function checkChoiceAnswer(btn, selected, correct) {
             const allBtns = document.querySelectorAll('.option');
             allBtns.forEach(b => b.disabled = true);
 
@@ -308,6 +472,30 @@
                 allBtns.forEach(b => {
                     if (b.textContent === correct) b.classList.add('correct');
                 });
+            }
+
+            updateStats();
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function checkFillAnswer() {
+            const fillInput = document.getElementById('fillInput');
+            const feedback = document.getElementById('answerFeedback');
+            const userAnswer = fillInput.value.trim().toLowerCase();
+            const correct = shuffledWords[currentIndex].word.toLowerCase();
+
+            fillInput.disabled = true;
+
+            if (userAnswer === correct) {
+                fillInput.classList.add('correct');
+                feedback.innerHTML = `✓ 正確！<span class="correct-answer">${shuffledWords[currentIndex].word}</span>`;
+                feedback.className = 'answer-feedback correct';
+                correctCount++;
+            } else {
+                fillInput.classList.add('wrong');
+                feedback.innerHTML = `✗ 正確答案是：<span class="correct-answer">${shuffledWords[currentIndex].word}</span>`;
+                feedback.className = 'answer-feedback wrong';
+                wrongCount++;
             }
 
             updateStats();
@@ -337,18 +525,24 @@
                 </div>
             `;
             document.getElementById('optionsContainer').innerHTML = '';
+            document.getElementById('fillContainer').classList.add('hidden');
             const nextBtn = document.getElementById('nextBtn');
             nextBtn.textContent = '重新開始';
             nextBtn.onclick = () => {
+                card.innerHTML = `
+                    <div class="meaning-display" id="meaningDisplay" onclick="speakWord()">
+                        ${currentMode === 'choice' ? 'female' : '女人'}
+                        <span class="speaker-icon">🔊</span>
+                    </div>
+                    <div class="hint" id="hintDisplay">點擊可以聽發音</div>
+                `;
                 nextBtn.textContent = '下一題';
                 nextBtn.onclick = nextQuestion;
-            card.innerHTML = `
-                <div class="word" id="wordDisplay" onclick="speakWord()">
-                    female
-                    <span class="speaker-icon">🔊</span>
-                </div>
-                <div class="hint" id="hintDisplay">點擊單字可發音</div>
-            `;
+                if (currentMode === 'fill') {
+                    document.getElementById('fillContainer').classList.remove('hidden');
+                } else {
+                    document.getElementById('optionsContainer').classList.remove('hidden');
+                }
                 initGame();
             };
         }
