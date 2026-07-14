@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>五十音學習</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+    background: #fef7f0;
+    min-height: 100vh;
+    padding: 12px 12px 80px 12px;
+    color: #333;
+  }
+  .header {
+    text-align: center;
+    padding: 20px 0 12px 0;
+  }
+  .header h1 {
+    font-size: 26px;
+    color: #e07090;
+    letter-spacing: 2px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #999;
+    margin-top: 4px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0 16px 0;
+  }
+  .tab-btn {
+    flex: 1;
+    max-width: 120px;
+    padding: 10px 0;
+    border: 2px solid #e07090;
+    border-radius: 25px;
+    background: #fff;
+    color: #e07090;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+  .tab-btn.active {
+    background: #e07090;
+    color: #fff;
+  }
+  .tab-btn:active { transform: scale(.95); }
+
+  .mode-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .mode-btn {
+    padding: 6px 18px;
+    border: 1.5px solid #bbb;
+    border-radius: 16px;
+    background: #fff;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .mode-btn.active {
+    border-color: #70b8d0;
+    background: #e8f5fa;
+    color: #4a8fa8;
+    font-weight: 600;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .grid.col3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.col1 { grid-template-columns: repeat(1, 1fr); max-width: 300px; }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    aspect-ratio: 1 / 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+    position: relative;
+    gap: 2px;
+  }
+  .card:active { transform: scale(.92); background: #fceaf0; }
+  .card .kana {
+    font-size: 32px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.2;
+  }
+  .card .romaji {
+    font-size: 11px;
+    color: #b0b0b0;
+    font-weight: 400;
+    letter-spacing: .5px;
+  }
+  .card .sound-icon {
+    font-size: 10px;
+    color: #ccc;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+  }
+
+  /* 練習模式 */
+  .quiz-area {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 10px 0;
+  }
+  .quiz-kana {
+    font-size: 72px;
+    color: #e07090;
+    margin: 20px 0;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .quiz-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .quiz-opt {
+    padding: 14px 0;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .quiz-opt:active { transform: scale(.93); }
+  .quiz-opt.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+  .quiz-opt.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+  .quiz-opt:disabled { opacity: .6; pointer-events: none; }
+
+  .quiz-score {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #888;
+  }
+  .quiz-score span { color: #e07090; font-weight: 700; }
+
+  .stat-bar {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #999;
+  }
+
+  /* Tab內容 */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .section-label {
+    font-size: 12px;
+    color: #bbb;
+    padding: 8px 0 2px 4px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 30px 0 10px;
+    font-size: 12px;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌸 五十音</h1>
+  <p>點卡片聽發音・輕鬆學</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="study">📖 學習</button>
+  <button class="tab-btn" data-tab="quiz">✏️ 練習</button>
+</div>
+
+<!-- ===== 學習模式 ===== -->
+<div id="tab-study" class="tab-content active">
+  <div class="mode-row">
+    <button class="mode-btn active" data-mode="hira">平假名</button>
+    <button class="mode-btn" data-mode="kata">片假名</button>
+  </div>
+  <div id="study-grid"></div>
+</div>
+
+<!-- ===== 練習模式 ===== -->
+<div id="tab-quiz" class="tab-content">
+  <div class="mode-row">
+    <button class="mode-btn active" data-qmode="hira">平假名</button>
+    <button class="mode-btn" data-qmode="kata">片假名</button>
+    <button class="mode-btn" data-qmode="mix">混合</button>
+  </div>
+  <div class="quiz-area" id="quiz-area">
+    <div class="quiz-kana" id="quiz-kana">あ</div>
+    <div class="quiz-options" id="quiz-options"></div>
+    <div class="quiz-score">答對 <span id="score-right">0</span> ／ 總計 <span id="score-total">0</span></div>
+    <div class="stat-bar">
+      <span id="progress-indicator">第 1 題</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 五十音資料 =====
+const HIRAGANA = [
+  { kana: 'あ', romaji: 'a' }, { kana: 'い', romaji: 'i' }, { kana: 'う', romaji: 'u' }, { kana: 'え', romaji: 'e' }, { kana: 'お', romaji: 'o' },
+  { kana: 'か', romaji: 'ka' }, { kana: 'き', romaji: 'ki' }, { kana: 'く', romaji: 'ku' }, { kana: 'け', romaji: 'ke' }, { kana: 'こ', romaji: 'ko' },
+  { kana: 'さ', romaji: 'sa' }, { kana: 'し', romaji: 'shi' }, { kana: 'す', romaji: 'su' }, { kana: 'せ', romaji: 'se' }, { kana: 'そ', romaji: 'so' },
+  { kana: 'た', romaji: 'ta' }, { kana: 'ち', romaji: 'chi' }, { kana: 'つ', romaji: 'tsu' }, { kana: 'て', romaji: 'te' }, { kana: 'と', romaji: 'to' },
+  { kana: 'な', romaji: 'na' }, { kana: 'に', romaji: 'ni' }, { kana: 'ぬ', romaji: 'nu' }, { kana: 'ね', romaji: 'ne' }, { kana: 'の', romaji: 'no' },
+  { kana: 'は', romaji: 'ha' }, { kana: 'ひ', romaji: 'hi' }, { kana: 'ふ', romaji: 'fu' }, { kana: 'へ', romaji: 'he' }, { kana: 'ほ', romaji: 'ho' },
+  { kana: 'ま', romaji: 'ma' }, { kana: 'み', romaji: 'mi' }, { kana: 'む', romaji: 'mu' }, { kana: 'め', romaji: 'me' }, { kana: 'も', romaji: 'mo' },
+  { kana: 'や', romaji: 'ya' }, { kana: 'ゆ', romaji: 'yu' }, { kana: 'よ', romaji: 'yo' },
+  { kana: 'ら', romaji: 'ra' }, { kana: 'り', romaji: 'ri' }, { kana: 'る', romaji: 'ru' }, { kana: 'れ', romaji: 're' }, { kana: 'ろ', romaji: 'ro' },
+  { kana: 'わ', romaji: 'wa' }, { kana: 'を', romaji: 'wo' },
+  { kana: 'ん', romaji: 'n' }
+];
+
+const KATAKANA = [
+  { kana: 'ア', romaji: 'a' }, { kana: 'イ', romaji: 'i' }, { kana: 'ウ', romaji: 'u' }, { kana: 'エ', romaji: 'e' }, { kana: 'オ', romaji: 'o' },
+  { kana: 'カ', romaji: 'ka' }, { kana: 'キ', romaji: 'ki' }, { kana: 'ク', romaji: 'ku' }, { kana: 'ケ', romaji: 'ke' }, { kana: 'コ', romaji: 'ko' },
+  { kana: 'サ', romaji: 'sa' }, { kana: 'シ', romaji: 'shi' }, { kana: 'ス', romaji: 'su' }, { kana: 'セ', romaji: 'se' }, { kana: 'ソ', romaji: 'so' },
+  { kana: 'タ', romaji: 'ta' }, { kana: 'チ', romaji: 'chi' }, { kana: 'ツ', romaji: 'tsu' }, { kana: 'テ', romaji: 'te' }, { kana: 'ト', romaji: 'to' },
+  { kana: 'ナ', romaji: 'na' }, { kana: 'ニ', romaji: 'ni' }, { kana: 'ヌ', romaji: 'nu' }, { kana: 'ネ', romaji: 'ne' }, { kana: 'ノ', romaji: 'no' },
+  { kana: 'ハ', romaji: 'ha' }, { kana: 'ヒ', romaji: 'hi' }, { kana: 'フ', romaji: 'fu' }, { kana: 'ヘ', romaji: 'he' }, { kana: 'ホ', romaji: 'ho' },
+  { kana: 'マ', romaji: 'ma' }, { kana: 'ミ', romaji: 'mi' }, { kana: 'ム', romaji: 'mu' }, { kana: 'メ', romaji: 'me' }, { kana: 'モ', romaji: 'mo' },
+  { kana: 'ヤ', romaji: 'ya' }, { kana: 'ユ', romaji: 'yu' }, { kana: 'ヨ', romaji: 'yo' },
+  { kana: 'ラ', romaji: 'ra' }, { kana: 'リ', romaji: 'ri' }, { kana: 'ル', romaji: 'ru' }, { kana: 'レ', romaji: 're' }, { kana: 'ロ', romaji: 'ro' },
+  { kana: 'ワ', romaji: 'wa' }, { kana: 'ヲ', romaji: 'wo' },
+  { kana: 'ン', romaji: 'n' }
+];
+
+// 行分類
+const ROW_INDEX = [0, 5, 10, 15, 20, 25, 30, 35, 37, 42, 45]; // あかさたなはまやらわん
+const ROW_NAMES = ['あ行', 'か行', 'さ行', 'た行', 'な行', 'は行', 'ま行', 'や行', 'ら行', 'わ行', 'ん'];
+
+// ===== 發音 =====
+function speak(text, lang = 'ja-JP') {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang;
+  u.rate = 0.7;
+  u.pitch = 1.0;
+  u.volume = 1;
+  window.speechSynthesis.speak(u);
+}
+
+// ===== 學習模式 =====
+let currentMode = 'hira';
+
+function renderStudy(mode) {
+  const data = mode === 'hira' ? HIRAGANA : KATAKANA;
+  const container = document.getElementById('study-grid');
+  container.innerHTML = '';
+
+  let rowStart = 0;
+  ROW_INDEX.forEach((startIdx, ri) => {
+    const endIdx = ROW_INDEX[ri + 1] || data.length;
+    if (startIdx >= data.length) return;
+
+    // 行標題
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = ROW_NAMES[ri] || '';
+    container.appendChild(label);
+
+    // 判斷此行是 5 欄還是特殊欄
+    const rowItems = data.slice(startIdx, endIdx);
+    const grid = document.createElement('div');
+    grid.className = 'grid' + (rowItems.length <= 3 ? ' col3' : '') + (rowItems.length === 1 ? ' col1' : '');
+    grid.style.marginBottom = '6px';
+
+    rowItems.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <span class="kana">${item.kana}</span>
+        <span class="romaji">${item.romaji}</span>
+        <span class="sound-icon">🔊</span>
+      `;
+      card.addEventListener('click', () => {
+        speak(item.kana);
+      });
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  });
+}
+
+// ===== 練習模式 =====
+let quizData = [];
+let quizMode = 'hira';
+let currentQ = null;
+let correctAnswer = '';
+let scoreRight = 0;
+let scoreTotal = 0;
+let quizQueue = [];
+let usedIndices = [];
+let questionCount = 0;
+
+function getQuizPool() {
+  if (quizMode === 'hira') return HIRAGANA.slice();
+  if (quizMode === 'kata') return KATAKANA.slice();
+  // 混合：交錯合併
+  const mix = [];
+  const len = Math.max(HIRAGANA.length, KATAKANA.length);
+  for (let i = 0; i < len; i++) {
+    if (i < HIRAGANA.length) mix.push({ kana: HIRAGANA[i].kana, romaji: HIRAGANA[i].romaji });
+    if (i < KATAKANA.length) mix.push({ kana: KATAKANA[i].kana, romaji: KATAKANA[i].romaji });
+  }
+  return mix;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function initQuiz() {
+  const pool = getQuizPool();
+  quizQueue = shuffle([...pool]);
+  usedIndices = [];
+  scoreRight = 0;
+  scoreTotal = 0;
+  questionCount = 0;
+  document.getElementById('score-right').textContent = '0';
+  document.getElementById('score-total').textContent = '0';
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (quizQueue.length === 0) {
+    document.getElementById('quiz-kana').textContent = '🎉 全做完啦！';
+    document.getElementById('quiz-options').innerHTML = `
+      <div style="grid-column:span 2;text-align:center;padding:16px 0;">
+        <button onclick="initQuiz()" style="padding:12px 36px;border:none;border-radius:25px;background:#e07090;color:#fff;font-size:16px;cursor:pointer;">再來一次 🔄</button>
+      </div>
+    `;
+    document.getElementById('progress-indicator').textContent = '已完成！';
+    return;
+  }
+
+  questionCount++;
+  currentQ = quizQueue.pop();
+  correctAnswer = currentQ.romaji;
+
+  document.getElementById('quiz-kana').textContent = currentQ.kana;
+  speak(currentQ.kana);
+
+  // 製作選項：1 個正確 + 3 個隨機錯誤
+  const pool = getQuizPool();
+  const wrongPool = pool.filter(i => i.romaji !== correctAnswer);
+  const wrongs = shuffle(wrongPool).slice(0, 3).map(i => i.romaji);
+  const options = shuffle([correctAnswer, ...wrongs]);
+
+  const container = document.getElementById('quiz-options');
+  container.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = opt;
+    btn.dataset.value = opt;
+    btn.addEventListener('click', () => handleAnswer(btn, opt));
+    container.appendChild(btn);
+  });
+
+  document.getElementById('progress-indicator').textContent = `第 ${questionCount} 題`;
+
+  // 清掉樣式
+  document.querySelectorAll('.quiz-opt').forEach(b => {
+    b.className = 'quiz-opt';
+    b.disabled = false;
+  });
+}
+
+function handleAnswer(btn, selected) {
+  const allBtns = document.querySelectorAll('.quiz-opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  scoreTotal++;
+  if (selected === correctAnswer) {
+    btn.classList.add('correct');
+    scoreRight++;
+  } else {
+    btn.classList.add('wrong');
+    // 標示正確答案
+    allBtns.forEach(b => {
+      if (b.dataset.value === correctAnswer) b.classList.add('correct');
+    });
+  }
+  document.getElementById('score-right').textContent = scoreRight;
+  document.getElementById('score-total').textContent = scoreTotal;
+
+  setTimeout(nextQuestion, 800);
+}
+
+// ===== Tab 切換 =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'quiz') initQuiz();
+  });
+});
+
+// ===== 學習模式切換 =====
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  if (btn.dataset.mode === 'hira' || btn.dataset.mode === 'kata') {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode="hira"],[data-mode="kata"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+      renderStudy(currentMode);
+    });
+  }
+});
+
+// ===== 練習模式切換 =====
+document.querySelectorAll('[data-qmode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-qmode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    quizMode = btn.dataset.qmode;
+    initQuiz();
+  });
+});
+
+// ===== 啟動 =====
+renderStudy('hira');
+initQuiz();
+</script>
+</body>
+</html>
